@@ -1,5 +1,5 @@
-require_relative 'board'
+require_relative 'chess'
 
-board = Chess::Board.new
+chess = Chess::Chess.new
 
-board.display
+chess.play
