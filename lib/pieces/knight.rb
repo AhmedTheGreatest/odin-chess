@@ -23,14 +23,14 @@ module Chess
 
     def knight_moves(current_position)
       [
-        [knight_move(current_position, 1, 2)],
-        [knight_move(current_position, 2, 1)],
-        [knight_move(current_position, -1, -2)],
-        [knight_move(current_position, -2, -1)],
-        [knight_move(current_position, 1, -2)],
-        [knight_move(current_position, 2, -1)],
-        [knight_move(current_position, -1, 2)],
-        [knight_move(current_position, -2, 1)]
+        knight_move(current_position, 1, 2),
+        knight_move(current_position, 2, 1),
+        knight_move(current_position, -1, -2),
+        knight_move(current_position, -2, -1),
+        knight_move(current_position, 1, -2),
+        knight_move(current_position, 2, -1),
+        knight_move(current_position, -1, 2),
+        knight_move(current_position, -2, 1)
       ]
     end
 
@@ -40,7 +40,7 @@ module Chess
       new_row = row + row_delta
       new_col = col + col_delta
 
-      [[new_row, new_col], [new_row + row_delta, new_col + col_delta]]
+      [new_row, new_col]
     end
   end
 end

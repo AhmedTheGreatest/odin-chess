@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 require_relative 'board'
-
 module Chess
   # This class represents the chess game
   class Chess
     def initialize
       @board = Board.new
       @current_turn = :white
+      @first_black_move = true
+      @first_white_move = true
     end
 
     def play
@@ -41,7 +42,7 @@ module Chess
       position = fetch_position('enter the destination of the piece you want to move:')
       loop do
         source_piece = @board.board[source_position[0]][source_position[1]]
-        valid_moves = source_piece.valid_moves(@board, source_position)
+        valid_moves = fetch_valid_moves(source_piece, source_position)
 
         break if valid_moves.include?(position)
 
@@ -50,6 +51,14 @@ module Chess
       end
 
       position
+    end
+
+    def fetch_valid_moves(piece, position)
+      if piece.is_a?(Pawn)
+        return piece.valid_moves(@board, position,
+                                 @current_turn == :white ? @first_white_move : @first_black_move)
+      end
+      piece.valid_moves(@board, position)
     end
 
     def fetch_position(prompt)

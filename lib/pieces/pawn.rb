@@ -10,7 +10,7 @@ module Chess
       @symbol = color == :white ? "\u{2659} ".white : "\u{265F} ".black
     end
 
-    def valid_moves(board, current_position)
+    def valid_moves(board, current_position, _first_move)
       moves = []
 
       forward_direction = color == :white ? -1 : 1
