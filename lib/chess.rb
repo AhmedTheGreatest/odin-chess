@@ -56,7 +56,7 @@ module Chess
     def fetch_valid_moves(piece, position)
       if piece.is_a?(Pawn)
         return piece.valid_moves(@board, position,
-                                 @current_turn == :white ? @first_white_move : @first_black_move)
+                                 @current_turn == :black ? @first_white_move : @first_black_move)
       end
       piece.valid_moves(@board, position)
     end
