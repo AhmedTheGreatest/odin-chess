@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
+
 require_relative 'board'
 module Chess
   # This class represents the chess game
@@ -9,6 +11,8 @@ module Chess
       @current_turn = :white
       @first_black_move = true
       @first_white_move = true
+      @last_move_piece = nil
+      @last_move_position = nil
     end
 
     def play
@@ -36,6 +40,14 @@ module Chess
 
       @board.board[destination_rank][destination_file] = piece
       @board.board[source_position.first][source_position.last] = nil
+      update_en_passant_attributes(piece, source_position, [destination_rank, destination_file])
+    end
+
+    def update_en_passant_attributes(piece, source_position, destination_position)
+      @last_move_piece = @board.board[destination_position[0]][destination_position[1]]
+      @last_move_position = [destination_position[0], destination_position[1]]
+      @last_two_step_pawn_move = nil
+      @last_two_step_pawn_move = true if piece.is_a?(Pawn) && (source_position[0] - destination_position[0]).abs == 2
     end
 
     def fetch_destination(source_position)
@@ -54,10 +66,8 @@ module Chess
     end
 
     def fetch_valid_moves(piece, position)
-      if piece.is_a?(Pawn)
-        return piece.valid_moves(@board, position,
-                                 @current_turn == :black ? @first_white_move : @first_black_move)
-      end
+      return piece.valid_moves(@board, position, @last_move_piece, @last_move_position) if piece.is_a?(Pawn)
+
       piece.valid_moves(@board, position)
     end
 

@@ -10,7 +10,7 @@ module Chess
       @symbol = color == :white ? "\u{2659} ".white : "\u{265F} ".black
     end
 
-    def valid_moves(board, current_position, _opposing_first_move)
+    def valid_moves(board, current_position, last_move_piece, last_move_position)
       moves = []
 
       forward_direction = color == :white ? -1 : 1
@@ -19,11 +19,16 @@ module Chess
       moves << one_square_forward(current_position, forward_direction)
 
       # Initial move - 2 Square Forward
-      moves << two_square_forward(current_position, forward_direction) if intial_row?(current_position)
+      moves << two_square_forward(current_position, forward_direction) if initial_row?(current_position)
 
       # Diagonal captures
       diagonal_capture_moves = diagonal_captures(board.board, current_position, forward_direction)
-      moves << diagonal_capture_moves if diagonal_capture_moves
+      moves << diagonal_capture_moves unless diagonal_capture_moves.empty?
+
+      # En Passant moves
+      en_passant_moves = en_passant(board, current_position, forward_direction, last_move_piece, last_move_position)
+      moves << en_passant_moves unless en_passant_moves.empty?
+
       filter_valid_moves(board, moves, current_position)
     end
 
@@ -38,6 +43,32 @@ module Chess
       end
     end
 
+    def en_passant(board, position, direction, last_move_piece, last_move_position)
+      moves = []
+      moves << right_en_passant(position, direction) if valid_en_passant_move?(board.board, position, direction, 1,
+                                                                               last_move_piece, last_move_position)
+      moves << left_en_passant(position, direction) if valid_en_passant_move?(board.board, position, direction, -1,
+                                                                              last_move_piece, last_move_position)
+      moves
+    end
+
+    def valid_en_passant_move?(board, position, forward_direction, sideways_direction,
+                               last_move_piece, last_move_position)
+      diagonal_piece_nil?(board, position, forward_direction, sideways_direction) &&
+        side_piece_exists?(board, position, sideways_direction) &&
+        last_move_position == [position[0], position[1] + sideways_direction] &&
+        last_move_piece.is_a?(Pawn) &&
+        last_move_piece.color != @color
+    end
+
+    def diagonal_piece_nil?(board, position, forward_direction, sideways_direction)
+      board[position[0] + forward_direction][position[1] + sideways_direction].nil?
+    end
+
+    def side_piece_exists?(board, position, sideways_direction)
+      !board[position[0]][position[1] + sideways_direction].nil?
+    end
+
     def one_square_forward(current_position, direction)
       [current_position[0] + direction, current_position[1]]
     end
@@ -50,6 +81,8 @@ module Chess
       moves = []
       moves << right_diagonal_capture(position, direction) if board[position[0] + direction][position[1] + 1]
       moves << left_diagonal_capture(position, direction) if board[position[0] + direction][position[1] - 1]
+
+      moves
     end
 
     def right_diagonal_capture(current_position, direction)
@@ -60,7 +93,7 @@ module Chess
       [current_position[0] + direction, current_position[1] - direction]
     end
 
-    def intial_row?(current_position)
+    def initial_row?(current_position)
       initial_row = color == :white ? 6 : 1
       current_position[0] == initial_row
     end
