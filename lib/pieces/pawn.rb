@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../piece'
 
 module Chess
@@ -29,17 +31,21 @@ module Chess
       en_passant_moves = en_passant(board, current_position, forward_direction, last_move_piece, last_move_position)
       moves << en_passant_moves unless en_passant_moves.empty?
 
-      filter_valid_moves(board, moves, current_position)
+      filter_valid_moves(board, moves, current_position, last_move_piece, last_move_position)
     end
 
     private
 
-    def filter_valid_moves(board, moves, current_position)
+    def filter_valid_moves(board, moves, current_position, last_move_piece, last_move_position)
       moves.select do |move|
         target_piece = board.board[move[0]][move[1]]
         destination_diagonal = (move[0] - current_position[0]).abs == 1 && (move[1] - current_position[1]).abs == 1
 
-        board.valid_position?(move) && target_piece.nil? && !destination_diagonal
+        next false unless board.valid_position?(move)
+
+        next true if en_passant_capture?(move, last_move_piece, last_move_position)
+
+        target_piece.nil? && !destination_diagonal
       end
     end
 
@@ -50,6 +56,13 @@ module Chess
       moves << left_en_passant(position, direction) if valid_en_passant_move?(board.board, position, direction, -1,
                                                                               last_move_piece, last_move_position)
       moves
+    end
+
+    def en_passant_capture?(move, last_move_piece, last_move_position)
+      return false unless last_move_piece && last_move_position
+
+      move[0] == last_move_position[0] && move[1] == last_move_position[1] &&
+        last_move_piece.is_a?(Pawn) && last_move_piece.color != @color
     end
 
     def valid_en_passant_move?(board, position, forward_direction, sideways_direction,
@@ -81,7 +94,6 @@ module Chess
       moves = []
       moves << right_diagonal_capture(position, direction) if board[position[0] + direction][position[1] + 1]
       moves << left_diagonal_capture(position, direction) if board[position[0] + direction][position[1] - 1]
-
       moves
     end
 

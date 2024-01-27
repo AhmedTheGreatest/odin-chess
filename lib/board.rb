@@ -58,7 +58,7 @@ module Chess
       add_piece(rank, 1, :knight, color)
       add_piece(rank, 2, :bishop, color)
       add_piece(rank, 5, :bishop, color)
-      if rank == 0
+      if rank.zero?
         add_piece(rank, 3, :queen, color)
         add_piece(rank, 4, :king, color)
       else
@@ -69,13 +69,8 @@ module Chess
 
     def print_cell(cell, current_color)
       if cell.is_a?(Piece)
-        if cell.color == :white
-          print cell.symbol.colorize(background: :light_white) if current_color == :white
-          print cell.symbol.colorize(background: :light_black) if current_color == :black
-        else
-          print cell.symbol.colorize(background: :light_white) if current_color == :white
-          print cell.symbol.colorize(background: :light_black) if current_color == :black
-        end
+        print cell.symbol.colorize(background: :light_white) if current_color == :white
+        print cell.symbol.colorize(background: :light_black) if current_color == :black
       else
         print current_color == :white ? '  '.colorize(background: :light_white) : '  '.colorize(background: :light_black)
       end
