@@ -16,11 +16,15 @@ module Chess
     end
 
     def play
-      turn
+      turn until game_end?
       @board.display
     end
 
     private
+
+    def game_end?
+      false # TODO: Add Checkmate logic, Stalemate logic, and draw logic
+    end
 
     def turn
       @board.display

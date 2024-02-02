@@ -92,5 +92,9 @@ module Chess
       when :king then board[rank][file] = King.new(color)
       end
     end
+
+    def remove_piece(rank, file)
+      @board[rank][file] = nil
+    end
   end
 end
