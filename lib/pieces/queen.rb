@@ -16,10 +16,12 @@ module Chess
       moves = []
 
       # Diagonal Moves
-      moves += diagonal_moves(board, current_position)
+      diagonal = diagonal_moves(board, current_position)
+      moves.concat(diagonal) unless diagonal.empty?
 
       # Straight Moves
-      moves += straight_moves(board, current_position)
+      straight = straight_moves(board, current_position)
+      moves.concat(straight) unless straight.empty?
 
       moves.select { |move| board.valid_position?(move) && board.board[move[0]][move[1]].nil? }
     end
@@ -32,7 +34,7 @@ module Chess
         moves(board, current_position, 1, -1),
         moves(board, current_position, -1, 1),
         moves(board, current_position, -1, -1)
-      ]
+      ].reject(&:empty?).flatten(1)
     end
 
     def straight_moves(board, current_position)
@@ -41,7 +43,7 @@ module Chess
         moves(board, current_position, 0, 1),
         moves(board, current_position, -1, 0),
         moves(board, current_position, 0, -1)
-      ]
+      ].reject(&:empty?).flatten(1)
     end
 
     def moves(board, current_position, row_delta, col_delta)

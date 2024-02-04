@@ -120,7 +120,7 @@ module Chess
     end
 
     def fill_empty_squares(row_index, col_index)
-      (col_index...@board[row_index].size).each { |col| @board[row_index][col] = '.' }
+      (col_index...@board[row_index].size).each { |col| @board[row_index][col] = nil }
     end
   end
 end
