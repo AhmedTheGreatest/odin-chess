@@ -18,10 +18,14 @@ module Chess
       setup_board
     end
 
+    def self.from_fen(fen)
+      board = Board.new
+      board.load_fen(fen)
+      board
+    end
+
     def setup_board
-      add_first_row(0, :black)
-      add_first_row(7, :white)
-      add_pawns
+      load_fen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     end
 
     def display
@@ -51,38 +55,31 @@ module Chess
       @board[position[0]][position[1]] = nil
     end
 
+    def load_fen(fen)
+      fen_parts = fen.split(' ')
+      rows = fen_parts[0].split('/')
+
+      rows.each_with_index do |row, i|
+        col_index = 0
+        row.each_char do |char|
+          if char.match?('/\d/')
+            fill_empty_squares(i, col_index, char.to_i)
+            col_index += char.to_i
+          else
+            process_non_empty_square(char, i, col_index)
+            col_index += 1
+          end
+        end
+        fill_empty_squares(i, col_index) if col_index > 0
+      end
+    end
+
     private
 
     def print_rank(rank, color)
       rank.each do |cell|
         print_cell(cell, color)
         color = switch_color(color)
-      end
-    end
-
-    def add_pawns
-      8.times do |pawn|
-        add_piece(1, pawn, :pawn, :black)
-      end
-
-      8.times do |pawn|
-        add_piece(6, pawn, :pawn, :white)
-      end
-    end
-
-    def add_first_row(rank, color)
-      add_piece(rank, 0, :rook, color)
-      add_piece(rank, 7, :rook, color)
-      add_piece(rank, 6, :knight, color)
-      add_piece(rank, 1, :knight, color)
-      add_piece(rank, 2, :bishop, color)
-      add_piece(rank, 5, :bishop, color)
-      if rank.zero?
-        add_piece(rank, 3, :queen, color)
-        add_piece(rank, 4, :king, color)
-      else
-        add_piece(rank, 4, :queen, color)
-        add_piece(rank, 3, :king, color)
       end
     end
 
@@ -110,6 +107,20 @@ module Chess
       when :queen then board[rank][file] = Queen.new(color)
       when :king then board[rank][file] = King.new(color)
       end
+    end
+
+    def process_non_empty_square(piece, row, col)
+      piece_map = {
+        'r' => Rook.new(:black), 'n' => Knight.new(:black), 'b' => Bishop.new(:black), 'q' => Queen.new(:black),
+        'k' => King.new(:black), 'p' => Pawn.new(:black),
+        'R' => Rook.new(:white), 'N' => Knight.new(:white), 'B' => Bishop.new(:white), 'Q' => Queen.new(:white),
+        'K' => King.new(:white), 'P' => Pawn.new(:white)
+      }
+      @board[row][col] = piece_map[piece]
+    end
+
+    def fill_empty_squares(row_index, col_index)
+      (col_index...@board[row_index].size).each { |col| @board[row_index][col] = '.' }
     end
   end
 end
