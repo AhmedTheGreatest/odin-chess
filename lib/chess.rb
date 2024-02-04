@@ -20,11 +20,15 @@ module Chess
       @board.display
     end
 
-    private
-
     def game_end?
       false # TODO: Add Checkmate logic, Stalemate logic, and draw logic
     end
+
+    def switch_turn
+      @current_turn = @current_turn == :white ? :black : :white
+    end
+
+    private
 
     def turn
       @board.display
@@ -32,19 +36,15 @@ module Chess
       switch_turn
     end
 
-    def switch_turn
-      @current_turn = @current_turn == :white ? :black : :white
-    end
-
     def make_move
       source_position = fetch_square
       piece = @board.board[source_position.first][source_position.last]
 
-      destination_rank, destination_file = fetch_destination(source_position)
+      destination = fetch_destination(source_position)
 
-      @board.board[destination_rank][destination_file] = piece
-      @board.board[source_position.first][source_position.last] = nil
-      update_en_passant_attributes(piece, source_position, [destination_rank, destination_file])
+      @board.set(destination, piece)
+      @board.remove_piece(source_position)
+      update_en_passant_attributes(piece, source_position, destination)
     end
 
     def update_en_passant_attributes(piece, source_position, destination_position)
@@ -147,3 +147,4 @@ module Chess
     end
   end
 end
+# rubocop:enable Metrics/ClassLength

@@ -14,7 +14,7 @@ module Chess
 
     def valid_moves(board, current_position)
       moves = []
-      # Straigth Moves in all sides
+      # Straight Moves in all sides
       moves += straight_moves(board, current_position, 1, 0)
       moves += straight_moves(board, current_position, 0, 1)
 

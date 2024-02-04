@@ -6,6 +6,7 @@ require_relative 'pieces/knight'
 require_relative 'pieces/bishop'
 require_relative 'pieces/king'
 require_relative 'pieces/queen'
+require 'colorize'
 
 module Chess
   # This class represents a Chess Board
@@ -25,21 +26,39 @@ module Chess
 
     def display
       current_color = :white
-      board.each do |rank|
-        rank.each do |cell|
-          print_cell(cell, current_color)
-          current_color = switch_color(current_color)
-        end
+      board.each_with_index do |rank, index|
+        print "#{(index - 8).abs} ".blue.bold
+        print_rank(rank, current_color)
         current_color = switch_color(current_color)
         puts ''
       end
+      puts '  a b c d e f g h'.blue.bold
     end
 
     def valid_position?(position)
       position.all? { |coord| coord.between?(0, 7) }
     end
 
+    def set(position, value)
+      @board[position[0]][position[1]] = value
+    end
+
+    def get(position)
+      @board[position[0]][position[1]]
+    end
+
+    def remove_piece(position)
+      @board[position[0]][position[1]] = nil
+    end
+
     private
+
+    def print_rank(rank, color)
+      rank.each do |cell|
+        print_cell(cell, color)
+        color = switch_color(color)
+      end
+    end
 
     def add_pawns
       8.times do |pawn|
@@ -91,10 +110,6 @@ module Chess
       when :queen then board[rank][file] = Queen.new(color)
       when :king then board[rank][file] = King.new(color)
       end
-    end
-
-    def remove_piece(rank, file)
-      @board[rank][file] = nil
     end
   end
 end
