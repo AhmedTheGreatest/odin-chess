@@ -62,15 +62,15 @@ module Chess
       rows.each_with_index do |row, i|
         col_index = 0
         row.each_char do |char|
-          if char.match?('/\d/')
-            fill_empty_squares(i, col_index, char.to_i)
+          if char.match?('\d')
+            fill_empty_squares(i, col_index)
             col_index += char.to_i
           else
             process_non_empty_square(char, i, col_index)
             col_index += 1
           end
         end
-        fill_empty_squares(i, col_index) if col_index > 0
+        fill_empty_squares(i, col_index) if col_index.positive?
       end
     end
 
