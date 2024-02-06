@@ -9,6 +9,7 @@ module Chess
       @from = from
       @to = to
       @piece = piece
+      @turn = piece.color
     end
   end
 end

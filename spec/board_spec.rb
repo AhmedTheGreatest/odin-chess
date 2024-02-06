@@ -22,7 +22,6 @@ describe Chess::Board do
   describe '#setup_board' do
     it 'sets up the board with pieces in valid starting positions' do
       board = Chess::Board.new
-      board.setup_board
       # Check sample positions to verify setup
       expect(board.board[0][0]).to be_a(Chess::Rook)
       expect(board.board[1][0]).to be_a(Chess::Pawn)
