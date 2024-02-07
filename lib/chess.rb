@@ -9,10 +9,7 @@ module Chess
     def initialize
       @board = Board.new
       @current_turn = :white
-      @first_black_move = true
-      @first_white_move = true
-      @last_move_piece = nil
-      @last_move_position = nil
+      @history = []
     end
 
     def play
@@ -45,14 +42,11 @@ module Chess
       @board.set(move.to, piece)
       @board.remove_piece(source_position)
       @board.remove_piece(move.captured_position) if move.is_a?(EnPassantMove)
-      update_en_passant_attributes(piece, source_position, move.to)
+      update_history(move)
     end
 
-    def update_en_passant_attributes(piece, source_position, destination_position)
-      @last_move_piece = @board.board[destination_position[0]][destination_position[1]]
-      @last_move_position = [destination_position[0], destination_position[1]]
-      @last_two_step_pawn_move = nil
-      @last_two_step_pawn_move = true if piece.is_a?(Pawn) && (source_position[0] - destination_position[0]).abs == 2
+    def update_history(move)
+      @history << move
     end
 
     def fetch_destination(source_position)
@@ -73,7 +67,7 @@ module Chess
     end
 
     def fetch_valid_moves(piece, position)
-      return piece.valid_moves(@board, position, @last_move_piece, @last_move_position) if piece.is_a?(Pawn)
+      return piece.valid_moves(@board, position, @history.last) if piece.is_a?(Pawn)
 
       piece.valid_moves(@board, position)
     end

@@ -20,7 +20,8 @@ describe Chess::King do
       it 'returns all of his 8 moves' do
         king_moves = king.valid_moves(board, [3, 3])
         correct_moves = [[4, 3], [2, 3], [3, 4], [3, 2], [4, 4], [2, 2], [2, 4], [4, 2]]
-        expect(king_moves).to match_array correct_moves
+        move_positions = king_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
   end

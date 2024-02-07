@@ -13,7 +13,8 @@ describe Chess::Knight do
       it 'returns 0 moves' do
         knight_moves = knight.valid_moves(board, [0, 1])
         correct_moves = [[2, 2], [2, 0]]
-        expect(knight_moves).to match_array correct_moves
+        move_positions = knight_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -23,7 +24,8 @@ describe Chess::Knight do
       it 'returns many moves' do
         knight_moves = knight.valid_moves(board, [3, 3])
         correct_moves = [[4, 5], [5, 4], [2, 1], [1, 2], [4, 1], [5, 2], [2, 5], [1, 4]]
-        expect(knight_moves).to match_array correct_moves
+        move_positions = knight_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -33,7 +35,8 @@ describe Chess::Knight do
       it 'returns only 2 moves' do
         knight_moves = knight.valid_moves(board, [0, 0])
         correct_moves = [[1, 2], [2, 1]]
-        expect(knight_moves).to match_array correct_moves
+        move_positions = knight_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
   end

@@ -22,7 +22,8 @@ describe Chess::Bishop do
         bishop_moves = bishop.valid_moves(board, [3, 3])
         correct_moves = [[4, 4], [5, 5], [6, 6], [7, 7], [4, 2], [5, 1], [6, 0], [2, 4], [1, 5], [0, 6], [2, 2],
                          [1, 1], [0, 0]]
-        expect(bishop_moves).to match_array correct_moves
+        move_positions = bishop_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -32,7 +33,8 @@ describe Chess::Bishop do
       it 'returns correct moves' do
         bishop_moves = bishop.valid_moves(board, [0, 5])
         correct_moves = [[1, 4], [2, 3], [3, 2], [4, 1], [5, 0]]
-        expect(bishop_moves).to match_array correct_moves
+        move_positions = bishop_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
   end

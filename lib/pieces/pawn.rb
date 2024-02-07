@@ -15,7 +15,7 @@ module Chess
       @symbol = color == :white ? "\u{2659} ".white : "\u{265F} ".black
     end
 
-    def valid_moves(board, current_position, last_move_piece, last_move_position)
+    def valid_moves(board, current_position, last_move)
       moves = []
 
       forward_direction = color == :white ? -1 : 1
@@ -31,10 +31,10 @@ module Chess
       moves.concat(diagonal_capture_moves) unless diagonal_capture_moves.empty?
 
       # En Passant moves
-      en_passant_moves = en_passant(board, current_position, forward_direction, last_move_piece, last_move_position)
+      en_passant_moves = en_passant(board, current_position, forward_direction, last_move&.piece, last_move&.to)
       moves.concat(en_passant_moves) unless en_passant_moves.empty?
 
-      filter_valid_moves(board, moves, current_position, last_move_piece, last_move_position, forward_direction)
+      filter_valid_moves(board, moves, current_position, last_move&.piece, last_move&.to, forward_direction)
     end
 
     private
