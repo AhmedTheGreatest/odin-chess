@@ -21,7 +21,7 @@ module Chess
       moves += diagonal_moves(board, current_position, -1, 1)
       moves += diagonal_moves(board, current_position, -1, -1)
 
-      moves.select { |move| board.valid_position?(move.to) && board.board[move.to[0]][move.to[1]].nil? }
+      moves.select { |move| board.valid_position?(move.to) }
     end
 
     private
@@ -32,9 +32,18 @@ module Chess
       row, col = current_position
 
       while board.valid_position?([row + row_delta, col + col_delta])
-        move = Move.new(current_position, [row + row_delta, col + col_delta], self)
-        moves << move
-        break unless board.board[row + row_delta][col + col_delta].nil?
+        next_row = row + row_delta
+        next_col = col + col_delta
+        next_square = board.board[next_row][next_col]
+
+        if next_square.nil?
+          moves << Move.new(current_position, [row + row_delta, col + col_delta], self)
+        else
+          if next_square.color != color
+            moves << CaptureMove.new(current_position, [next_row, next_col], self, [next_row, next_col])
+          end
+          break
+        end
 
         row += row_delta
         col += col_delta

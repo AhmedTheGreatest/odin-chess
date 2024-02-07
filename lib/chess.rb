@@ -41,7 +41,7 @@ module Chess
 
       @board.set(move.to, piece)
       @board.remove_piece(source_position)
-      @board.remove_piece(move.captured_position) if move.is_a?(EnPassantMove)
+      @board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
       update_history(move)
     end
 
