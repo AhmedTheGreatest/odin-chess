@@ -2,5 +2,7 @@
 
 require_relative '../move'
 
-# EnPassant is a special type of capture in a Chess game for pawns
-class EnPassantMove < CaptureMove; end
+module Chess
+  # EnPassant is a special type of capture in a Chess game for pawns
+  class EnPassantMove < CaptureMove; end
+end

@@ -22,7 +22,7 @@ describe Chess::Rook do
         rook_moves = rook.valid_moves(board, [0, 0])
         correct_moves = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [0, 1], [0, 2], [0, 3], [0, 4],
                          [0, 5], [0, 6], [0, 7]]
-        expect(rook_moves).to eql correct_moves
+        expect(rook_moves).to match_array correct_moves
       end
     end
 
@@ -32,7 +32,7 @@ describe Chess::Rook do
       it 'returns many moves' do
         rook_moves = rook.valid_moves(board, [7, 0])
         correct_moves = [[6, 0], [5, 0]]
-        expect(rook_moves).to eql correct_moves
+        expect(rook_moves).to match_array correct_moves
       end
     end
   end

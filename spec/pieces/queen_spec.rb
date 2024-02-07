@@ -22,7 +22,7 @@ describe Chess::Queen do
         queen_moves = queen.valid_moves(board, [0, 3])
         correct_moves = [[1, 4], [2, 5], [3, 6], [4, 7], [1, 2], [2, 1], [3, 0], [1, 3], [2, 3], [3, 3], [4, 3],
                          [5, 3], [6, 3], [7, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 2], [0, 1], [0, 0]]
-        expect(queen_moves).to eql correct_moves
+        expect(queen_moves).to match_array correct_moves
       end
     end
 
@@ -32,7 +32,7 @@ describe Chess::Queen do
       it 'returns correct moves' do
         queen_moves = queen.valid_moves(board, [0, 3])
         correct_moves = [[1, 3], [2, 3]]
-        expect(queen_moves).to eql correct_moves
+        expect(queen_moves).to match_array correct_moves
       end
     end
   end

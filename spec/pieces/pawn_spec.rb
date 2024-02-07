@@ -13,7 +13,8 @@ describe Chess::Pawn do
       it 'returns 2 moves' do
         pawn_moves = pawn.valid_moves(board, [6, 0], nil, nil)
         correct_moves = [[5, 0], [4, 0]]
-        expect(pawn_moves).to eql correct_moves
+        move_positions = pawn_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -23,7 +24,8 @@ describe Chess::Pawn do
       it 'returns one move' do
         pawn_moves = pawn.valid_moves(board, [2, 0], pawn, [2, 0])
         correct_moves = [[3, 0]]
-        expect(pawn_moves).to eql correct_moves
+        move_positions = pawn_moves.map(&:to)
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -33,7 +35,9 @@ describe Chess::Pawn do
       it 'returns capturing move' do
         pawn_moves = pawn.valid_moves(board, [2, 0], board.board[3][1], [3, 1])
         correct_moves = [[3, 0], [3, 1]]
-        expect(pawn_moves).to eql correct_moves
+        move_positions = pawn_moves.map(&:to)
+
+        expect(move_positions).to match_array correct_moves
       end
     end
 
@@ -43,7 +47,9 @@ describe Chess::Pawn do
       it 'returns en passant move' do
         pawn_moves = pawn.valid_moves(board, [3, 1], board.board[3][2], [3, 2])
         correct_moves = [[2, 1], [2, 2]]
-        expect(pawn_moves).to eql correct_moves
+        move_positions = pawn_moves.map(&:to)
+
+        expect(move_positions).to match_array correct_moves
       end
     end
   end

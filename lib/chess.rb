@@ -40,11 +40,12 @@ module Chess
       source_position = fetch_square
       piece = @board.board[source_position.first][source_position.last]
 
-      destination = fetch_destination(source_position)
+      move = fetch_destination(source_position)
 
-      @board.set(destination, piece)
+      @board.set(move.to, piece)
       @board.remove_piece(source_position)
-      update_en_passant_attributes(piece, source_position, destination)
+      @board.remove_piece(move.captured_position) if move.is_a?(EnPassantMove)
+      update_en_passant_attributes(piece, source_position, move.to)
     end
 
     def update_en_passant_attributes(piece, source_position, destination_position)
@@ -56,17 +57,19 @@ module Chess
 
     def fetch_destination(source_position)
       position = fetch_position('enter the destination of the piece you want to move:')
+      valid_move = nil
       loop do
         source_piece = @board.board[source_position[0]][source_position[1]]
         valid_moves = fetch_valid_moves(source_piece, source_position)
 
-        break if valid_moves.include?(position)
+        valid_move = valid_moves.find { |move| move.to == position }
+        break if valid_move
 
         puts 'Invalid move. Please choose a valid destination.'
         position = fetch_position('enter the destination of the piece you want to move:')
       end
 
-      position
+      valid_move
     end
 
     def fetch_valid_moves(piece, position)

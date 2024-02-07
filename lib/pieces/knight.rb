@@ -18,7 +18,7 @@ module Chess
       # Knight L Shaped Moves
       moves += knight_moves(current_position)
 
-      moves.select { |move| board.valid_position?(move) && board.board[move[0]][move[1]].nil? }
+      moves.select { |move| board.valid_position?(move.to) && board.board[move.to[0]][move.to[1]].nil? }
     end
 
     private
@@ -42,7 +42,7 @@ module Chess
       new_row = row + row_delta
       new_col = col + col_delta
 
-      [new_row, new_col]
+      Move.new(current_position, [new_row, new_col], self)
     end
   end
 end

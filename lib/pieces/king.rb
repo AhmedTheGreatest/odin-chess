@@ -21,26 +21,26 @@ module Chess
       # 1 Square to each diagonal
       moves.concat(one_square_diagonal(current_position))
 
-      moves.select { |move| board.valid_position?(move) && board.board[move[0]][move[1]].nil? }
+      moves.select { |move| board.valid_position?(move.to) && board.board[move.to[0]][move.to[1]].nil? }
     end
 
     private
 
     def one_square(current_position)
       [
-        [current_position[0] + 1, current_position[1]],
-        [current_position[0] - 1, current_position[1]],
-        [current_position[0], current_position[1] + 1],
-        [current_position[0], current_position[1] - 1]
+        Move.new(current_position, [current_position[0] + 1, current_position[1]], self),
+        Move.new(current_position, [current_position[0] - 1, current_position[1]], self),
+        Move.new(current_position, [current_position[0], current_position[1] + 1], self),
+        Move.new(current_position, [current_position[0], current_position[1] - 1], self)
       ]
     end
 
     def one_square_diagonal(current_position)
       [
-        [current_position[0] + 1, current_position[1] + 1],
-        [current_position[0] - 1, current_position[1] - 1],
-        [current_position[0] - 1, current_position[1] + 1],
-        [current_position[0] + 1, current_position[1] - 1]
+        Move.new(current_position, [current_position[0] + 1, current_position[1] + 1], self),
+        Move.new(current_position, [current_position[0] - 1, current_position[1] - 1], self),
+        Move.new(current_position, [current_position[0] - 1, current_position[1] + 1], self),
+        Move.new(current_position, [current_position[0] + 1, current_position[1] - 1], self)
       ]
     end
   end
