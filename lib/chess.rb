@@ -17,6 +17,21 @@ module Chess
       @board.display
     end
 
+    def self.from_fen(fen)
+      game = Chess.new
+      game.load_fen(fen)
+      game
+    end
+
+    def load_fen(fen)
+      @board = Board.from_fen(fen)
+      turn = fen.split(' ')[1] == 'w' ? :white : :black
+      @current_turn = turn
+      @history = []
+      en_passant_from_fen(fen)
+      # TODO: Implement Castling Rights
+    end
+
     def game_end?
       false # TODO: Add Checkmate logic, Stalemate logic, and draw logic
     end
@@ -27,6 +42,31 @@ module Chess
 
     private
 
+    # WIP Does NOT WORK
+    def en_passant_from_fen(fen)
+      piece_notation = fen.split(' ')[3]
+      return nil if piece_notation == '-'
+
+      target_coords = find_cell(piece_notation) # Rank, file
+      piece_coords = piece_from_target_square(target_coords)
+      piece = @board.get(piece_coords)
+
+      # Calculate last previous rank
+      previous_rank = (piece_coords[0] == 4 ? 6 : 1) # Ranks start from the top starting from 0
+      previous_coords = [previous_rank, piece_coords[1]]
+
+      # Creating and appending last move to history for en passant
+      previous_move = Move.new(previous_coords, piece_coords, piece)
+      @history << previous_move
+    end
+
+    # WIP
+    def piece_from_target_square(target_square)
+      target_rank, target_file = target_square
+      piece_rank = target_rank == 2 ? 3 : 4
+      [piece_rank, target_file]
+    end
+
     def turn
       @board.display
       make_move
@@ -35,13 +75,15 @@ module Chess
 
     def make_move
       source_position = fetch_square
-      piece = @board.board[source_position.first][source_position.last]
-
       move = fetch_destination(source_position)
 
-      @board.set(move.to, piece)
-      @board.remove_piece(source_position)
+      move_piece(move)
+    end
+
+    def move_piece(move)
+      @board.remove_piece(move.from)
       @board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
+      @board.set(move.to, move.piece)
       update_history(move)
     end
 

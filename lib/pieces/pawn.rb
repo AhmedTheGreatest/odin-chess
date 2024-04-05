@@ -73,15 +73,17 @@ module Chess
       moves
     end
 
-    def right_en_passant(current_position, direction)
-      new_position = [current_position[0] + direction, current_position[1] + direction]
-      capture_position = [current_position[0], current_position[1] + direction]
+    def right_en_passant(current_position, forward_direction)
+      new_file = current_position[1] - 1 # Adding sideways direction to the file
+      new_position = [current_position[0] + forward_direction, new_file] # New position of the piece
+      capture_position = [current_position[0], new_file] # The piece the pawn is capturing
       EnPassantMove.new(current_position, new_position, self, capture_position)
     end
 
-    def left_en_passant(current_position, direction)
-      new_position = [current_position[0] + direction, current_position[1] - direction]
-      capture_position = [current_position[0], current_position[1] - direction]
+    def left_en_passant(current_position, forward_direction)
+      new_file = current_position[1] + 1 # Adding sideways direction to the file
+      new_position = [current_position[0] + forward_direction, new_file] # New position of the piece
+      capture_position = [current_position[0], new_file] # The piece the pawn is capturing
       EnPassantMove.new(current_position, new_position, self, capture_position)
     end
 
@@ -90,10 +92,11 @@ module Chess
 
       en_passant_square = [last_move_position[0] + direction, last_move_position[1]]
 
-      move.to[0] == en_passant_square[0] &&
-        move.to[1] == en_passant_square[1] &&
-        last_move_piece.is_a?(Pawn) &&
-        last_move_piece.color != @color
+      return false if en_passant_square[0] != move.to[0] || en_passant_square[1] != move.to[1]
+
+      return false unless last_move_piece.is_a?(Pawn) && last_move_piece.color != @color
+
+      true
     end
 
     def valid_en_passant_move?(board, position, forward_direction, sideways_direction,
