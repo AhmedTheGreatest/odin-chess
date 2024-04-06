@@ -5,11 +5,15 @@
 require_relative 'board'
 module Chess
   # This class represents the chess game
+  attr_reader :current_turn, :history, :full_move_clock, :half_move_clock
+
   class Chess
     def initialize
       @board = Board.new
       @current_turn = :white
       @history = []
+      @half_move_clock = 0
+      @full_move_clock = 0
     end
 
     def play
@@ -25,9 +29,12 @@ module Chess
 
     def load_fen(fen)
       @board = Board.from_fen(fen)
-      turn = fen.split(' ')[1] == 'w' ? :white : :black
+      fen_parts = fen.split(' ')
+      turn = fen_parts[1] == 'w' ? :white : :black
       @current_turn = turn
       @history = []
+      @half_move_clock = fen_parts[4].to_i
+      @full_move_clock = fen_parts[5].to_i
       en_passant_from_fen(fen)
       # TODO: Implement Castling Rights
     end
@@ -42,7 +49,6 @@ module Chess
 
     private
 
-    # WIP Does NOT WORK
     def en_passant_from_fen(fen)
       piece_notation = fen.split(' ')[3]
       return nil if piece_notation == '-'
@@ -60,7 +66,6 @@ module Chess
       @history << previous_move
     end
 
-    # WIP
     def piece_from_target_square(target_square)
       target_rank, target_file = target_square
       piece_rank = target_rank == 2 ? 3 : 4
@@ -70,24 +75,47 @@ module Chess
     def turn
       @board.display
       make_move
+      puts "Full moves: #{@full_move_clock}"
+      puts "Half moves: #{@half_move_clock}"
       switch_turn
     end
 
     def make_move
       source_position = fetch_square
       move = fetch_destination(source_position)
-
+      handle_move_clock(move)
       move_piece(move)
+      update_history(move)
+    end
+
+    def handle_move_clock(move)
+      handle_half_moves(move)
+      handle_full_moves(move)
+    end
+
+    def handle_half_moves(move)
+      @half_move_clock += 1
+      @half_move_clock = 0 if move.is_a?(CaptureMove) || move.piece.is_a?(Pawn)
+    end
+
+    def handle_full_moves(move)
+      @full_move_clock += 1 if move.turn == :black
     end
 
     def move_piece(move)
       @board.remove_piece(move.from)
       @board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
+
+      if move.is_a?(CastleMove)
+        @board.remove_piece(move.previous_rook_position)
+        @board.set(move.new_rook_position, move.rook_piece)
+      end
+
       @board.set(move.to, move.piece)
-      update_history(move)
     end
 
     def update_history(move)
+      move.piece.has_moved = true if move.piece.is_a?(King) || move.piece.is_a?(Rook)
       @history << move
     end
 

@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative '../move'
-require_relative '../moves/capture'
-require_relative '../moves/en_passant'
 require_relative '../piece'
 
 module Chess

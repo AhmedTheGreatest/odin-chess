@@ -6,10 +6,12 @@ module Chess
   # A class representing a Rook in a chess game
   class Rook < Piece
     attr_reader :symbol
+    attr_accessor :has_moved
 
     def initialize(color)
       super(color)
       @symbol = color == :white ? "\u{2656} ".white : "\u{265C} ".black
+      @has_moved = false
     end
 
     def valid_moves(board, current_position)
