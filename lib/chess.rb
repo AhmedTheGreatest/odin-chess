@@ -3,17 +3,23 @@
 # rubocop:disable Metrics/ClassLength
 
 require_relative 'board'
+# This
 module Chess
   # This class represents the chess game
-  attr_reader :current_turn, :history, :full_move_clock, :half_move_clock
-
   class Chess
+    attr_reader :current_turn, :history, :full_move_clock, :half_move_clock, :white_king_pos, :black_king_pos
+
     def initialize
       @board = Board.new
       @current_turn = :white
       @history = []
       @half_move_clock = 0
       @full_move_clock = 0
+      @white_king_pos = fetch_king_position(:white)
+      @black_king_pos = fetch_king_position(:black)
+      @white_check = false
+      @black_check = false
+      update_check
     end
 
     def play
@@ -35,8 +41,9 @@ module Chess
       @history = []
       @half_move_clock = fen_parts[4].to_i
       @full_move_clock = fen_parts[5].to_i
+      @white_king_pos = fetch_king_position(:white)
+      @black_king_pos = fetch_king_position(:black)
       en_passant_from_fen(fen)
-      # TODO: Implement Castling Rights
     end
 
     def game_end?
@@ -47,7 +54,44 @@ module Chess
       @current_turn = @current_turn == :white ? :black : :white
     end
 
+    def in_check?(position)
+      king_piece =  @board.get(position)
+      valid_moves = moves_of_pieces(king_piece.color == :white ? :black : :white)
+      move_destinations = fetch_destination_of_moves(valid_moves)
+
+      return true if move_destinations.include?(position)
+
+      false
+    end
+
     private
+
+    def moves_of_pieces(color)
+      moves = []
+
+      @board.board.each_with_index do |rank, rank_index|
+        rank.each_with_index do |piece, file_index|
+          next if piece.nil? || piece.color != color
+
+          valid_moves = fetch_valid_moves(piece, [rank_index, file_index])
+          moves.concat(valid_moves)
+        end
+      end
+
+      moves
+    end
+
+    def fetch_destination_of_moves(moves)
+      moves.map(&:to)
+    end
+
+    def fetch_king_position(color)
+      @board.board.each_with_index do |rank, rank_index|
+        rank.each_with_index do |piece, file_index|
+          return [rank_index, file_index] if piece&.color == color && piece.is_a?(King)
+        end
+      end
+    end
 
     def en_passant_from_fen(fen)
       piece_notation = fen.split(' ')[3]
@@ -75,9 +119,23 @@ module Chess
     def turn
       @board.display
       make_move
+      update_check
+      log_messages
+      switch_turn
+    end
+
+    def update_check
+      @white_check = in_check?(@white_king_pos)
+      @black_check = in_check?(@black_king_pos)
+    end
+
+    def log_messages
       puts "Full moves: #{@full_move_clock}"
       puts "Half moves: #{@half_move_clock}"
-      switch_turn
+      # puts "White King Position: #{@white_king_pos}"
+      # puts "Black King Position: #{@black_king_pos}"
+      puts 'White is in CHECK!' if in_check?(@white_king_pos)
+      puts 'Black is in CHECK!' if in_check?(@black_king_pos)
     end
 
     def make_move

@@ -56,7 +56,6 @@ module Chess
     end
 
     def queen_side_castle(board, current_position)
-      # TODO: Castling
       rook_position = fetch_rook_for_castle(:queen)
       return nil if empty_squares_in_between_rank?(board, current_position, rook_position)
 
