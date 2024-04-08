@@ -3,11 +3,13 @@
 # rubocop:disable Metrics/ClassLength
 
 require_relative 'board'
-# This
+require_relative 'check_determination'
 module Chess
   # This class represents the chess game
   class Chess
     attr_reader :current_turn, :history, :full_move_clock, :half_move_clock, :white_king_pos, :black_king_pos
+
+    BACK_COMMAND = 'back'
 
     def initialize
       @board = Board.new
@@ -15,14 +17,13 @@ module Chess
       @history = []
       @half_move_clock = 0
       @full_move_clock = 0
-      @white_king_pos = fetch_king_position(:white)
-      @black_king_pos = fetch_king_position(:black)
       @white_check = false
       @black_check = false
-      update_check
+      update_check_state
     end
 
     def play
+      log_messages
       turn until game_end?
       @board.display
     end
@@ -38,11 +39,10 @@ module Chess
       fen_parts = fen.split(' ')
       turn = fen_parts[1] == 'w' ? :white : :black
       @current_turn = turn
-      @history = []
       @half_move_clock = fen_parts[4].to_i
       @full_move_clock = fen_parts[5].to_i
-      @white_king_pos = fetch_king_position(:white)
-      @black_king_pos = fetch_king_position(:black)
+      @history = []
+      update_check_state
       en_passant_from_fen(fen)
     end
 
@@ -54,44 +54,49 @@ module Chess
       @current_turn = @current_turn == :white ? :black : :white
     end
 
-    def in_check?(position)
-      king_piece =  @board.get(position)
-      valid_moves = moves_of_pieces(king_piece.color == :white ? :black : :white)
-      move_destinations = fetch_destination_of_moves(valid_moves)
+    # def in_check?(position)
+    #   king_piece =  @board.get(position)
+    #   valid_moves = moves_of_pieces(king_piece.color == :white ? :black : :white)
+    #   move_destinations = fetch_destination_of_moves(valid_moves)
 
-      return true if move_destinations.include?(position)
+    #   return true if move_destinations.include?(position)
 
-      false
-    end
+    #   false
+    # end
 
     private
 
-    def moves_of_pieces(color)
-      moves = []
-
-      @board.board.each_with_index do |rank, rank_index|
-        rank.each_with_index do |piece, file_index|
-          next if piece.nil? || piece.color != color
-
-          valid_moves = fetch_valid_moves(piece, [rank_index, file_index])
-          moves.concat(valid_moves)
-        end
-      end
-
-      moves
+    def update_check_state
+      @white_check = CheckDetermination.for?(:white, @board)
+      @black_check = CheckDetermination.for?(:black, @board)
     end
 
-    def fetch_destination_of_moves(moves)
-      moves.map(&:to)
-    end
+    # def moves_of_pieces(color)
+    #   moves = []
 
-    def fetch_king_position(color)
-      @board.board.each_with_index do |rank, rank_index|
-        rank.each_with_index do |piece, file_index|
-          return [rank_index, file_index] if piece&.color == color && piece.is_a?(King)
-        end
-      end
-    end
+    #   @board.board.each_with_index do |rank, rank_index|
+    #     rank.each_with_index do |piece, file_index|
+    #       next if piece.nil? || piece.color != color
+
+    #       valid_moves = fetch_valid_moves(piece, [rank_index, file_index])
+    #       moves.concat(valid_moves)
+    #     end
+    #   end
+
+    #   moves
+    # end
+
+    # def fetch_destination_of_moves(moves)
+    #   moves.map(&:to)
+    # end
+
+    # def fetch_king_position(color)
+    #   @board.board.each_with_index do |rank, rank_index|
+    #     rank.each_with_index do |piece, file_index|
+    #       return [rank_index, file_index] if piece&.color == color && piece.is_a?(King)
+    #     end
+    #   end
+    # end
 
     def en_passant_from_fen(fen)
       piece_notation = fen.split(' ')[3]
@@ -119,14 +124,8 @@ module Chess
     def turn
       @board.display
       make_move
-      update_check
       log_messages
       switch_turn
-    end
-
-    def update_check
-      @white_check = in_check?(@white_king_pos)
-      @black_check = in_check?(@black_king_pos)
     end
 
     def log_messages
@@ -134,16 +133,24 @@ module Chess
       puts "Half moves: #{@half_move_clock}"
       # puts "White King Position: #{@white_king_pos}"
       # puts "Black King Position: #{@black_king_pos}"
-      puts 'White is in CHECK!' if in_check?(@white_king_pos)
-      puts 'Black is in CHECK!' if in_check?(@black_king_pos)
+      puts 'White is in CHECK!' if CheckDetermination.for?(:white, @board)
+      puts 'Black is in CHECK!' if CheckDetermination.for?(:black, @board)
     end
 
     def make_move
-      source_position = fetch_square
-      move = fetch_destination(source_position)
+      move = fetch_move
       handle_move_clock(move)
       move_piece(move)
+      update_check_state
       update_history(move)
+    end
+
+    def fetch_move
+      loop do
+        source_position = fetch_square
+        move = fetch_destination(source_position)
+        return move unless move.nil?
+      end
     end
 
     def handle_move_clock(move)
@@ -177,21 +184,46 @@ module Chess
       @history << move
     end
 
-    def fetch_destination(source_position)
-      position = fetch_position('enter the destination of the piece you want to move:')
-      valid_move = nil
-      loop do
-        source_piece = @board.board[source_position[0]][source_position[1]]
-        valid_moves = fetch_valid_moves(source_piece, source_position)
+    def move_piece_custom_board(move, board)
+      board.remove_piece(move.from)
+      board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
 
-        valid_move = valid_moves.find { |move| move.to == position }
-        break if valid_move
-
-        puts 'Invalid move. Please choose a valid destination.'
-        position = fetch_position('enter the destination of the piece you want to move:')
+      if move.is_a?(CastleMove)
+        board.remove_piece(move.previous_rook_position)
+        board.set(move.new_rook_position, move.rook_piece)
       end
 
-      valid_move
+      board.set(move.to, move.piece)
+      board
+    end
+
+    def fetch_destination(source_position)
+      loop do
+        position = fetch_position('enter the destination of the piece you want to move (type \'back\' to go back):')
+        return if position == BACK_COMMAND
+
+        source_piece = @board.get(source_position)
+        valid_moves = fetch_valid_moves(source_piece, source_position)
+        valid_move = valid_moves.find { |move| move.to == position }
+        return valid_move if allowed_move?(valid_move)
+
+        puts 'Invalid move. Please choose a valid destination.'
+      end
+    end
+
+    def allowed_move?(move)
+      return false unless move
+
+      return false if move_results_in_check?(move)
+
+      true
+    end
+
+    def move_results_in_check?(move)
+      board_copy = Marshal.load(Marshal.dump(@board))
+
+      board_copy = move_piece_custom_board(move, board_copy)
+      CheckDetermination.for?(move.turn, board_copy)
     end
 
     def fetch_valid_moves(piece, position)
@@ -203,26 +235,30 @@ module Chess
     def fetch_position(prompt)
       puts "#{@current_turn == :white ? 'White' : 'Black'} #{prompt}"
       input = fetch_valid_input
+      return input if input == BACK_COMMAND
+
       find_cell(input)
     end
 
     def fetch_square
-      position = fetch_position('enter the position of the piece you want to move: (e4)')
-
       loop do
-        break if @board.board[position[0]][position[1]] && @board.board[position[0]][position[1]].color == @current_turn
+        position = fetch_position('enter the position of the piece you want to move: (e4)')
+
+        next if position == BACK_COMMAND
+
+        if @board.board[position[0]][position[1]] && @board.board[position[0]][position[1]].color == @current_turn
+          return position
+        end
 
         puts 'Invalid move. Please choose a valid piece.'
-        position = fetch_position('enter the position of the piece you want to move: (e4)')
       end
-
-      position
     end
 
     def fetch_valid_input
       input = nil
       loop do
         input = gets.chomp.downcase
+        break if input == BACK_COMMAND
         break if input.length >= 2 && input.match?(/[a-zA-Z]/) && input.match?(/\d/)
       end
       input

@@ -43,6 +43,10 @@ module Chess
       position.all? { |coord| coord.between?(0, 7) }
     end
 
+    def set_board(board)
+      @board = board
+    end
+
     def set(position, value)
       @board[position[0]][position[1]] = value
     end

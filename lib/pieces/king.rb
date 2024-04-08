@@ -42,7 +42,7 @@ module Chess
     def king_side_castle(board, current_position)
       # TODO: Castling
       rook_position = fetch_rook_for_castle(:king)
-      return nil if empty_squares_in_between_rank?(board, current_position, rook_position)
+      return nil unless empty_squares_in_between_rank?(board, current_position, rook_position)
 
       rook_piece = board.get(rook_position)
       return nil unless rook_piece.is_a?(Rook) && rook_piece.color == @color
@@ -57,7 +57,8 @@ module Chess
 
     def queen_side_castle(board, current_position)
       rook_position = fetch_rook_for_castle(:queen)
-      return nil if empty_squares_in_between_rank?(board, current_position, rook_position)
+
+      return nil unless empty_squares_in_between_rank?(board, current_position, rook_position)
 
       rook_piece = board.get(rook_position)
       return nil unless rook_piece.is_a?(Rook) && rook_piece.color == @color
@@ -77,19 +78,32 @@ module Chess
       [rook_rank, rook_file]
     end
 
-    def empty_squares_in_between_rank?(board, position_a, _position_b)
+    def empty_squares_in_between_rank?(board, position_a, position_b)
       rank, file = position_a
+      diff = calculate_difference(file, position_b[1])
+      # Check each square until reaching position_b
+      loop do
+        # Check if the next square is a valid position
+        break unless board.valid_position?([rank, file + diff])
 
-      while board.valid_position?([rank, file + 1])
-        next_file = file + 1
+        next_file = file + diff
         next_square = board.board[rank][next_file]
 
+        return true if position_b == [rank, next_file] && next_square.is_a?(Rook)
+
+        # If the next square is occupied, return false
         return false unless next_square.nil?
 
-        file += 1
+        file += diff
       end
 
       true
+    end
+
+    def calculate_difference(num_a, num_b)
+      diff = num_b - num_a
+      diff /= diff.abs # Normalize the difference to either -1 or 1
+      diff
     end
 
     def one_square(board, current_position)
