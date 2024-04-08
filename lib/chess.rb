@@ -150,7 +150,12 @@ module Chess
       switch_turn
     end
 
+    def display_heading
+      puts 'A Chess Game made by Ahmed Hannan'.red.bold.underline.italic
+    end
+
     def log_messages
+      display_heading
       puts
       puts "Full moves: #{@full_move_clock}".red.bold
       puts "Half moves: #{@half_move_clock}".red.bold
