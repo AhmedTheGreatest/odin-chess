@@ -29,7 +29,7 @@ module Chess
     private
 
     def filter_valid_moves(board, moves)
-      moves.select { |move| board.valid_position?(move.to) && board.board[move.to[0]][move.to[1]].nil? }
+      moves.select { |move| board.valid_position?(move.to) }
     end
 
     def diagonal_moves(board, current_position)

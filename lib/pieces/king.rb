@@ -14,7 +14,7 @@ module Chess
       @has_moved = false
     end
 
-    def valid_moves(board, current_position)
+    def valid_moves(board, current_position, check: false)
       moves = []
 
       # 1 Square to each side
@@ -24,7 +24,7 @@ module Chess
       moves.concat(one_square_diagonal(board, current_position))
 
       # Castling
-      castle_moves = castle_moves(board, current_position).reject(&:nil?)
+      castle_moves = castle_moves(board, current_position, check: check).reject(&:nil?)
       moves.concat(castle_moves) unless castle_moves.empty?
 
       moves.select { |move| board.valid_position?(move.to) }
@@ -32,7 +32,9 @@ module Chess
 
     private
 
-    def castle_moves(board, current_position)
+    def castle_moves(board, current_position, check: false)
+      return [] if check
+
       [
         king_side_castle(board, current_position),
         queen_side_castle(board, current_position)
@@ -86,6 +88,8 @@ module Chess
         # Check if the next square is a valid position
         break unless board.valid_position?([rank, file + diff])
 
+        break if CheckDetermination.position_for?(@color, [rank, file], board)
+
         next_file = file + diff
         next_square = board.board[rank][next_file]
 
@@ -97,7 +101,7 @@ module Chess
         file += diff
       end
 
-      true
+      false
     end
 
     def calculate_difference(num_a, num_b)

@@ -47,22 +47,13 @@ module Chess
     end
 
     def game_end?
-      false # TODO: Add Checkmate logic, Stalemate logic, and draw logic
+      # TODO: Add Checkmate logic, Stalemate logic, and draw logic
+      CheckDetermination.checkmate?(:white, @board) || CheckDetermination.checkmate?(:black, @board)
     end
 
     def switch_turn
       @current_turn = @current_turn == :white ? :black : :white
     end
-
-    # def in_check?(position)
-    #   king_piece =  @board.get(position)
-    #   valid_moves = moves_of_pieces(king_piece.color == :white ? :black : :white)
-    #   move_destinations = fetch_destination_of_moves(valid_moves)
-
-    #   return true if move_destinations.include?(position)
-
-    #   false
-    # end
 
     private
 
@@ -70,33 +61,6 @@ module Chess
       @white_check = CheckDetermination.for?(:white, @board)
       @black_check = CheckDetermination.for?(:black, @board)
     end
-
-    # def moves_of_pieces(color)
-    #   moves = []
-
-    #   @board.board.each_with_index do |rank, rank_index|
-    #     rank.each_with_index do |piece, file_index|
-    #       next if piece.nil? || piece.color != color
-
-    #       valid_moves = fetch_valid_moves(piece, [rank_index, file_index])
-    #       moves.concat(valid_moves)
-    #     end
-    #   end
-
-    #   moves
-    # end
-
-    # def fetch_destination_of_moves(moves)
-    #   moves.map(&:to)
-    # end
-
-    # def fetch_king_position(color)
-    #   @board.board.each_with_index do |rank, rank_index|
-    #     rank.each_with_index do |piece, file_index|
-    #       return [rank_index, file_index] if piece&.color == color && piece.is_a?(King)
-    #     end
-    #   end
-    # end
 
     def en_passant_from_fen(fen)
       piece_notation = fen.split(' ')[3]
@@ -135,6 +99,8 @@ module Chess
       # puts "Black King Position: #{@black_king_pos}"
       puts 'White is in CHECK!' if CheckDetermination.for?(:white, @board)
       puts 'Black is in CHECK!' if CheckDetermination.for?(:black, @board)
+      puts 'CHECKMATE for White!' if CheckDetermination.checkmate?(:white, @board)
+      puts 'CHECKMATE for Black!' if CheckDetermination.checkmate?(:black, @board)
     end
 
     def make_move
@@ -228,6 +194,9 @@ module Chess
 
     def fetch_valid_moves(piece, position)
       return piece.valid_moves(@board, position, @history.last) if piece.is_a?(Pawn)
+
+      check = piece.color == :white ? @white_check : @black_check
+      return piece.valid_moves(@board, position, check: check) if piece.is_a?(King)
 
       piece.valid_moves(@board, position)
     end

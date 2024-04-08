@@ -23,6 +23,48 @@ module Chess
       false
     end
 
+    def self.checkmate?(color, board)
+      check = for?(color, board)
+      check && !legal_moves?(color, board)
+    end
+
+    def self.move_results_in_check?(move, board)
+      board_copy = Marshal.load(Marshal.dump(board))
+      board_copy = move_piece_custom_board(move, board_copy)
+
+      for?(move.turn, board_copy)
+    end
+
+    def self.legal_moves?(color, board)
+      moves = moves_of_pieces(color == :white ? :black : :white, board)
+      valid_moves = moves.select do |move|
+        move if allowed_move?(move, board)
+      end
+      true unless valid_moves.empty?
+    end
+
+    def self.allowed_move?(move, board)
+      return false unless move
+
+      return false if move_results_in_check?(move, board)
+
+      true
+    end
+
+    def self.move_piece_custom_board(move, board)
+      board.remove_piece(move.from)
+      board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
+
+      if move.is_a?(CastleMove)
+        board.remove_piece(move.previous_rook_position)
+        board.set(move.new_rook_position, move.rook_piece)
+      end
+
+      board.set(move.to, move.piece)
+
+      board
+    end
+
     def self.fetch_king_position(color, board)
       board.board.each_with_index do |rank, rank_index|
         rank.each_with_index do |piece, file_index|
@@ -52,6 +94,7 @@ module Chess
 
     def self.fetch_valid_moves(piece, position, board)
       return piece.valid_moves(board, position, nil) if piece.is_a?(Pawn)
+      return [] if piece.is_a?(King)
 
       piece.valid_moves(board, position)
     end
