@@ -23,9 +23,10 @@ module Chess
     end
 
     def play
-      log_messages
+      # log_messages
       turn until game_end?
       @board.display
+      display_game_end_msg
     end
 
     def self.from_fen(fen)
@@ -48,7 +49,13 @@ module Chess
 
     def game_end?
       # TODO: Add Checkmate logic, Stalemate logic, and draw logic
-      CheckDetermination.checkmate?(:white, @board) || CheckDetermination.checkmate?(:black, @board)
+      return :checkmate if checkmate?(:white) || checkmate?(:black)
+      return :stalemate if stalemate?
+      return :threefold_repetition if threefold_repetition?
+      return :insufficient_material if insufficient_material?
+      return :fifty_moves_rule if fifty_moves_rule?
+
+      false
     end
 
     def switch_turn
@@ -56,6 +63,56 @@ module Chess
     end
 
     private
+
+    def display_game_end_msg
+      puts 'Game over!'.red
+      winner = determine_winner
+      case winner
+      when :white
+        puts 'White has won the game!'
+      when :black
+        puts 'Black has won the game!'
+      when :stalemate
+        puts 'The game is a STALEMATE :|'
+      when :draw
+        puts 'The game is a draw.'
+      end
+    end
+
+    def determine_winner
+      game_end_reason = game_end?
+      case game_end_reason
+      when :checkmate
+        @current_turn
+      when :stalemate
+        :stalemate
+      when :threefold_repetition, :insufficient_material, :fifty_moves_rule
+        :draw
+      end
+    end
+
+    def stalemate?
+      # Check if the current player is stalemated
+      # Stalemate occurs when the player is not in check, but they have no legal moves
+      CheckDetermination.stalemate?(current_turn, @board)
+    end
+
+    def insufficient_material?
+      # Check if the game has ended due to insufficient material on the board
+    end
+
+    def threefold_repetition?
+      # Check if the game has ended due to threefold repetition of the same position
+    end
+
+    def fifty_moves_rule?
+      # Check if the game has ended due to the fifty-move rule
+      @half_move_clock >= 50
+    end
+
+    def checkmate?(color)
+      CheckDetermination.checkmate?(color, @board)
+    end
 
     def update_check_state
       @white_check = CheckDetermination.for?(:white, @board)
@@ -86,21 +143,24 @@ module Chess
     end
 
     def turn
+      system('clear')
+      log_messages
       @board.display
       make_move
-      log_messages
       switch_turn
     end
 
     def log_messages
-      puts "Full moves: #{@full_move_clock}"
-      puts "Half moves: #{@half_move_clock}"
+      puts
+      puts "Full moves: #{@full_move_clock}".red.bold
+      puts "Half moves: #{@half_move_clock}".red.bold
       # puts "White King Position: #{@white_king_pos}"
       # puts "Black King Position: #{@black_king_pos}"
-      puts 'White is in CHECK!' if CheckDetermination.for?(:white, @board)
-      puts 'Black is in CHECK!' if CheckDetermination.for?(:black, @board)
-      puts 'CHECKMATE for White!' if CheckDetermination.checkmate?(:white, @board)
-      puts 'CHECKMATE for Black!' if CheckDetermination.checkmate?(:black, @board)
+      puts 'White is in CHECK!'.red.bold if CheckDetermination.for?(:white, @board)
+      puts 'Black is in CHECK!'.red.bold if CheckDetermination.for?(:black, @board)
+      puts 'CHECKMATE for White!'.red.bold if checkmate?(:white)
+      puts 'CHECKMATE for Black!'.red.bold if checkmate?(:black)
+      puts
     end
 
     def make_move

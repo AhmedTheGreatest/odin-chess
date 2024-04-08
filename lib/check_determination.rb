@@ -28,6 +28,10 @@ module Chess
       check && !legal_moves?(color, board)
     end
 
+    def self.stalemate?(color, board)
+      !legal_moves?(color, board)
+    end
+
     def self.move_results_in_check?(move, board)
       board_copy = Marshal.load(Marshal.dump(board))
       board_copy = move_piece_custom_board(move, board_copy)
