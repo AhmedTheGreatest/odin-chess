@@ -7,8 +7,9 @@ require_relative 'check_determination'
 module Chess
   # This class represents the chess game
   class Chess
-    attr_reader :current_turn, :history, :full_move_clock, :half_move_clock, :white_king_pos, :black_king_pos
+    attr_reader :current_turn, :history, :full_move_clock, :half_move_clock
 
+    # Constants
     BACK_COMMAND = 'back'
     SAVE_COMMAND = 'save'
 
@@ -38,30 +39,33 @@ module Chess
     end
 
     def play
-      # log_messages
+      # Keeps playing until the game has ended
       turn until game_end?
       @board.display
       display_game_end_msg
     end
 
+    # Load a game from a FEN
     def self.from_fen(fen)
       game = Chess.new
       game.load_fen(fen)
       game
     end
 
+    # Load FEN string representation of a chess board and update the internal state of the board accordingly.
     def load_fen(fen)
-      @board = Board.from_fen(fen)
-      fen_parts = fen.split(' ')
-      turn = fen_parts[1] == 'w' ? :white : :black
-      @current_turn = turn
-      @half_move_clock = fen_parts[4].to_i
-      @full_move_clock = fen_parts[5].to_i
-      @history = []
-      update_check_state
-      en_passant_from_fen(fen)
+      @board = Board.from_fen(fen) # Creates a new board from the FEN string
+      fen_parts = fen.split(' ') # Splits the FEN strings into parts
+      turn = fen_parts[1] == 'w' ? :white : :black # Determines whose turn it is
+      @current_turn = turn # Sets the current turn
+      @half_move_clock = fen_parts[4].to_i # Sets the half move clock
+      @full_move_clock = fen_parts[5].to_i # Sets the full move clock
+      @history = [] # Resets the history
+      update_check_state # Updates the check state
+      en_passant_from_fen(fen) # Updates the en passant state from the FEN string
     end
 
+    # Check if the game has ended and return the appropriate reason otherwise false.
     def game_end?
       # TODO: Add Checkmate logic, Stalemate logic, and draw logic
       return :checkmate if checkmate?(:white) || checkmate?(:black)
@@ -73,6 +77,7 @@ module Chess
       false
     end
 
+    # Switches the current turn
     def switch_turn
       @current_turn = @current_turn == :white ? :black : :white
     end
@@ -99,6 +104,7 @@ module Chess
       "games/game#{counter}.bin"
     end
 
+    # Displays the game end messages
     def display_game_end_msg
       puts 'Game over!'.red
       winner = determine_winner
@@ -114,6 +120,7 @@ module Chess
       end
     end
 
+    # Determine which player won the game
     def determine_winner
       game_end_reason = game_end?
       case game_end_reason
@@ -126,36 +133,95 @@ module Chess
       end
     end
 
+    # Determine whether the game is a stalemate
     def stalemate?
       # Check if the current player is stalemated
       # Stalemate occurs when the player is not in check, but they have no legal moves
       CheckDetermination.stalemate?(current_turn, @board)
     end
 
+    # Check if the game has ended due to insufficient material on the board
     def insufficient_material?
-      # Check if the game has ended due to insufficient material on the board
+      insufficient_material_by_count? || insufficient_material_specific_cases?
     end
 
-    def threefold_repetition?
-      # Check if the game has ended due to threefold repetition of the same position
-    end
+    # Check if the game has ended due to threefold repetition of the same position
+    def threefold_repetition?; end
 
+    # Check if the game has ended due to the fifty-move rule
     def fifty_moves_rule?
-      # Check if the game has ended due to the fifty-move rule
       @half_move_clock >= 50
     end
 
+    # Returns if the provided player is checkmated
     def checkmate?(color)
       CheckDetermination.checkmate?(color, @board)
     end
 
+    # Fetches pieces of the same color from the board
+    def fetch_pieces(color)
+      pieces = []
+      @board.board.each_with_index do |rank, _rank_index|
+        rank.each_with_index do |piece, _file_index|
+          next if piece.nil? || piece.color != color
+
+          pieces << piece
+        end
+      end
+    end
+
+    # Updates the check state for both players
     def update_check_state
       @white_check = CheckDetermination.for?(:white, @board)
       @black_check = CheckDetermination.for?(:black, @board)
     end
 
+    # Checks if the board has insufficient only kings left
+    def insufficient_material_by_count?
+      white_pieces = fetch_pieces(:white).reject { |piece| piece.is_a?(King) }
+      black_pieces = fetch_pieces(:black).reject { |piece| piece.is_a?(King) }
+
+      white_pieces.empty? && black_pieces.empty?
+    end
+
+    # Checks if the board has insufficient material by specific cases
+    def insufficient_material_specific_cases?
+      white_pieces = fetch_pieces(:white)
+      black_pieces = fetch_pieces(:black)
+      pieces = white_pieces + black_pieces
+
+      return false if pieces.any? { |piece| piece.is_a?(Pawn) }
+      return true if king_vs_one_piece? || king_and_bishop_or_knight_vs_lone_king?
+
+      false
+    end
+
+    # Checks if only a king and one other piece is left
+    def king_vs_one_piece?
+      white_pieces = fetch_pieces(:white).reject { |piece| piece.is_a?(King) }
+      black_pieces = fetch_pieces(:black).reject { |piece| piece.is_a?(King) }
+      (white_pieces.length == 1 && black_pieces.empty?) || (black_pieces.length == 1 && white_pieces.empty?)
+    end
+
+    # Checks if only a king and (bishop or knight) vs a lone king are left
+    def king_and_bishop_or_knight_vs_lone_king?
+      white_pieces = fetch_pieces(:white).reject { |piece| piece.is_a?(King) }
+      black_pieces = fetch_pieces(:black).reject { |piece| piece.is_a?(King) }
+
+      return false unless (white_pieces.length == 1 && black_pieces.empty?) ||
+                          (black_pieces.length == 1 && white_pieces.empty?)
+
+      (white_pieces.any? { |piece| piece_is_bishop_or_knight?(piece) }) ||
+        (black_pieces.any? { |piece| piece_is_bishop_or_knight?(piece) })
+    end
+
+    def piece_is_bishop_or_knight?(piece)
+      piece.is_a?(Bishop) || piece.is_a?(Knight)
+    end
+
+    # Updates the En Passant state from FEN
     def en_passant_from_fen(fen)
-      piece_notation = fen.split(' ')[3]
+      piece_notation = fen.split(' ')[3] # Splits the FEN string into parts
       return nil if piece_notation == '-'
 
       target_coords = find_cell(piece_notation) # Rank, file
@@ -171,12 +237,14 @@ module Chess
       @history << previous_move
     end
 
+    # Given the en passant target square (found in FEN strings) return the coordinates of the piece to be captured
     def piece_from_target_square(target_square)
       target_rank, target_file = target_square
       piece_rank = target_rank == 2 ? 3 : 4
       [piece_rank, target_file]
     end
 
+    # Plays a Chess game turn
     def turn
       system('clear')
       log_messages
@@ -201,6 +269,7 @@ module Chess
       puts
     end
 
+    # Makes a move
     def make_move
       move = fetch_move
       handle_move_clock(move)
@@ -209,6 +278,7 @@ module Chess
       update_history(move)
     end
 
+    # Fetches a move from the player
     def fetch_move
       loop do
         source_position = fetch_square
@@ -217,20 +287,24 @@ module Chess
       end
     end
 
+    # Handles the move clock
     def handle_move_clock(move)
       handle_half_moves(move)
       handle_full_moves(move)
     end
 
+    # Handles the half move clock
     def handle_half_moves(move)
       @half_move_clock += 1
       @half_move_clock = 0 if move.is_a?(CaptureMove) || move.piece.is_a?(Pawn)
     end
 
+    # Handles the full move clock
     def handle_full_moves(move)
       @full_move_clock += 1 if move.turn == :black
     end
 
+    # Moves the piece on the board
     def move_piece(move)
       @board.remove_piece(move.from)
       @board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
@@ -243,11 +317,13 @@ module Chess
       @board.set(move.to, move.piece)
     end
 
+    # Updates the history
     def update_history(move)
       move.piece.has_moved = true if move.piece.is_a?(King) || move.piece.is_a?(Rook)
       @history << move
     end
 
+    # Moves piece on a custom board
     def move_piece_custom_board(move, board)
       board.remove_piece(move.from)
       board.remove_piece(move.captured_position) if move.is_a?(CaptureMove)
@@ -261,6 +337,7 @@ module Chess
       board
     end
 
+    # Fetches the move destination from the player
     def fetch_destination(source_position)
       loop do
         position = fetch_position('enter the destination of the piece you want to move (type \'back\' to go back):')
