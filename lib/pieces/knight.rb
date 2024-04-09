@@ -44,9 +44,9 @@ module Chess
       next_square = board.board[next_row]&.[](next_col)
 
       if next_square.nil?
-        Move.new(current_position, [next_row, next_col], self)
+        Move.new(current_position, [next_row, next_col], self, board.board)
       elsif next_square.color != color
-        CaptureMove.new(current_position, [next_row, next_col], self, [next_row, next_col])
+        CaptureMove.new(current_position, [next_row, next_col], self, [next_row, next_col], board.board)
       end
     end
   end

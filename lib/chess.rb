@@ -146,7 +146,16 @@ module Chess
     end
 
     # Check if the game has ended due to threefold repetition of the same position
-    def threefold_repetition?; end
+    def threefold_repetition?
+      current_position_count = board_history.count(@board.board)
+      return true if current_position_count >= 3
+
+      false
+    end
+
+    def board_history
+      @history.map(&:board)
+    end
 
     # Check if the game has ended due to the fifty-move rule
     def fifty_moves_rule?
@@ -233,7 +242,7 @@ module Chess
       previous_coords = [previous_rank, piece_coords[1]]
 
       # Creating and appending last move to history for en passant
-      previous_move = Move.new(previous_coords, piece_coords, piece)
+      previous_move = Move.new(previous_coords, piece_coords, piece, @board.board)
       @history << previous_move
     end
 

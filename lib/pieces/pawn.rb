@@ -18,10 +18,10 @@ module Chess
       forward_direction = color == :white ? -1 : 1
 
       # Regular move - 1 Square Forward
-      moves << one_square_forward(current_position, forward_direction)
+      moves << one_square_forward(current_position, forward_direction, board)
 
       # Initial move - 2 Square Forward
-      moves << two_square_forward(current_position, forward_direction) if initial_row?(current_position)
+      moves << two_square_forward(current_position, forward_direction, board) if initial_row?(current_position)
 
       # Diagonal captures
       diagonal_capture_moves = diagonal_captures(board, current_position, forward_direction)
@@ -54,8 +54,8 @@ module Chess
 
     def en_passant(board, position, direction, last_move_piece, last_move_position)
       moves = []
-      right_capture = right_en_passant(position, direction)
-      left_capture = left_en_passant(position, direction)
+      right_capture = right_en_passant(position, direction, board)
+      left_capture = left_en_passant(position, direction, board)
 
       if valid_en_passant_move?(board.board, position, direction, -1,
                                 last_move_piece, last_move_position)
@@ -70,18 +70,18 @@ module Chess
       moves
     end
 
-    def right_en_passant(current_position, forward_direction)
+    def right_en_passant(current_position, forward_direction, board)
       new_file = current_position[1] - 1 # Adding sideways direction to the file
       new_position = [current_position[0] + forward_direction, new_file] # New position of the piece
       capture_position = [current_position[0], new_file] # The piece the pawn is capturing
-      EnPassantMove.new(current_position, new_position, self, capture_position)
+      EnPassantMove.new(current_position, new_position, self, capture_position, board.board)
     end
 
-    def left_en_passant(current_position, forward_direction)
+    def left_en_passant(current_position, forward_direction, board)
       new_file = current_position[1] + 1 # Adding sideways direction to the file
       new_position = [current_position[0] + forward_direction, new_file] # New position of the piece
       capture_position = [current_position[0], new_file] # The piece the pawn is capturing
-      EnPassantMove.new(current_position, new_position, self, capture_position)
+      EnPassantMove.new(current_position, new_position, self, capture_position, board.board)
     end
 
     def en_passant_capture?(move, last_move_piece, last_move_position, direction)
@@ -116,21 +116,21 @@ module Chess
       !board[position[0]][position[1] + sideways_direction].nil?
     end
 
-    def one_square_forward(current_position, direction)
+    def one_square_forward(current_position, direction, board)
       new_position = [current_position[0] + direction, current_position[1]]
-      Move.new(current_position, new_position, self)
+      Move.new(current_position, new_position, self, board.board)
     end
 
-    def two_square_forward(current_position, direction)
+    def two_square_forward(current_position, direction, board)
       new_position = [current_position[0] + direction * 2, current_position[1]]
-      Move.new(current_position, new_position, self)
+      Move.new(current_position, new_position, self, board.board)
     end
 
     def diagonal_captures(board, position, direction)
       moves = []
 
-      right_diagonal = right_diagonal_capture(position, direction)
-      left_diagonal = left_diagonal_capture(position, direction)
+      right_diagonal = right_diagonal_capture(position, direction, board)
+      left_diagonal = left_diagonal_capture(position, direction, board)
 
       if board.valid_position?(right_diagonal.to) && board.board[right_diagonal.to[0]][right_diagonal.to[1]]
         moves << right_diagonal
@@ -142,14 +142,14 @@ module Chess
       moves
     end
 
-    def right_diagonal_capture(current_position, direction)
+    def right_diagonal_capture(current_position, direction, board)
       new_position = [current_position[0] + direction, current_position[1] + direction]
-      CaptureMove.new(current_position, new_position, self, new_position)
+      CaptureMove.new(current_position, new_position, self, new_position, board.board)
     end
 
-    def left_diagonal_capture(current_position, direction)
+    def left_diagonal_capture(current_position, direction, board)
       new_position = [current_position[0] + direction, current_position[1] - direction]
-      CaptureMove.new(current_position, new_position, self, new_position)
+      CaptureMove.new(current_position, new_position, self, new_position, board.board)
     end
 
     def initial_row?(current_position)

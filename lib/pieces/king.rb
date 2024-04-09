@@ -132,9 +132,9 @@ module Chess
       dest_square = board.board[new_position[0]][new_position[1]] if board.valid_position?(new_position)
 
       if dest_square.nil?
-        Move.new(current_position, new_position, self)
+        Move.new(current_position, new_position, self, board.board)
       elsif dest_square.color != color
-        CaptureMove.new(current_position, new_position, self, new_position)
+        CaptureMove.new(current_position, new_position, self, new_position, board.board)
       end
     end
   end

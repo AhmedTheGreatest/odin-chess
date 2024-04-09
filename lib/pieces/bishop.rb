@@ -37,10 +37,10 @@ module Chess
         next_square = board.board[next_row][next_col]
 
         if next_square.nil?
-          moves << Move.new(current_position, [row + row_delta, col + col_delta], self)
+          moves << Move.new(current_position, [row + row_delta, col + col_delta], self, board.board)
         else
           if next_square.color != color
-            moves << CaptureMove.new(current_position, [next_row, next_col], self, [next_row, next_col])
+            moves << CaptureMove.new(current_position, [next_row, next_col], self, [next_row, next_col], board.board)
           end
           break
         end

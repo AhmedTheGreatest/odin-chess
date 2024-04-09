@@ -7,8 +7,8 @@ module Chess
   class CaptureMove < Move
     attr_reader :captured_position
 
-    def initialize(from, to, piece, captured_position)
-      super(from, to, piece)
+    def initialize(from, to, piece, captured_position, board)
+      super(from, to, piece, board)
       @captured_position = captured_position
     end
   end
