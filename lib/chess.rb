@@ -10,6 +10,7 @@ module Chess
     attr_reader :current_turn, :history, :full_move_clock, :half_move_clock, :white_king_pos, :black_king_pos
 
     BACK_COMMAND = 'back'
+    SAVE_COMMAND = 'save'
 
     def initialize
       @board = Board.new
@@ -20,6 +21,20 @@ module Chess
       @white_check = false
       @black_check = false
       update_check_state
+    end
+
+    # Loads a game from a file
+    def self.load_game(path)
+      # If the file does not exist display an error
+      unless File.exist?(path)
+        puts "Error: File #{path} not found."
+        return nil
+      end
+
+      # Opens the file and loads the object
+      File.open(path, 'r') do |file|
+        Marshal.load(file.read)
+      end
     end
 
     def play
@@ -63,6 +78,26 @@ module Chess
     end
 
     private
+
+    # Serializes and saves a game into a file
+    def save_game
+      Dir.mkdir('games') unless Dir.exist?('games') # Creates a games directory unless it already exists
+
+      File.open(available_file_name, 'w') do |file|
+        file.write(Marshal.dump(self))
+      end
+    end
+
+    # Returns the available game file name
+    def available_file_name
+      counter = 0
+      loop do
+        break unless File.exist?("games/game#{counter}.bin")
+
+        counter += 1
+      end
+      "games/game#{counter}.bin"
+    end
 
     def display_game_end_msg
       puts 'Game over!'.red
@@ -159,8 +194,6 @@ module Chess
       puts
       puts "Full moves: #{@full_move_clock}".red.bold
       puts "Half moves: #{@half_move_clock}".red.bold
-      # puts "White King Position: #{@white_king_pos}"
-      # puts "Black King Position: #{@black_king_pos}"
       puts 'White is in CHECK!'.red.bold if CheckDetermination.for?(:white, @board)
       puts 'Black is in CHECK!'.red.bold if CheckDetermination.for?(:black, @board)
       puts 'CHECKMATE for White!'.red.bold if checkmate?(:white)
@@ -233,6 +266,8 @@ module Chess
         position = fetch_position('enter the destination of the piece you want to move (type \'back\' to go back):')
         return if position == BACK_COMMAND
 
+        save_game if position == SAVE_COMMAND
+
         source_piece = @board.get(source_position)
         valid_moves = fetch_valid_moves(source_piece, source_position)
         valid_move = valid_moves.find { |move| move.to == position }
@@ -269,7 +304,7 @@ module Chess
     def fetch_position(prompt)
       puts "#{@current_turn == :white ? 'White' : 'Black'} #{prompt}"
       input = fetch_valid_input
-      return input if input == BACK_COMMAND
+      return input if [BACK_COMMAND, SAVE_COMMAND].include?(input)
 
       find_cell(input)
     end
@@ -279,6 +314,11 @@ module Chess
         position = fetch_position('enter the position of the piece you want to move: (e4)')
 
         next if position == BACK_COMMAND
+
+        if position == SAVE_COMMAND
+          save_game
+          next
+        end
 
         if @board.board[position[0]][position[1]] && @board.board[position[0]][position[1]].color == @current_turn
           return position
@@ -292,7 +332,7 @@ module Chess
       input = nil
       loop do
         input = gets.chomp.downcase
-        break if input == BACK_COMMAND
+        break if [BACK_COMMAND, SAVE_COMMAND].include?(input)
         break if input.length >= 2 && input.match?(/[a-zA-Z]/) && input.match?(/\d/)
       end
       input
